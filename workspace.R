@@ -1,59 +1,99 @@
 library(tercen)
 library(dplyr)
-library(devtools)
-
 library(flowCore)
 library(FlowSOM)
+library(devtools)
 install_github('saeyslab/CytoNorm')
 
 
+
 options("tercen.workflowId" = "c760adb979f713659d9e4826b004a670")
-options("tercen.stepId"     = "53508f67-4c40-4bfb-9c5d-c50a28a6b129")
+options("tercen.stepId"     = "2b534492-09da-4d7b-a93b-25a32aaee591")
 
 getOption("tercen.workflowId")
 getOption("tercen.stepId")
+
+save_rds <- function(object, filename, ctx) {
+  
+  workflow <- ctx$client$workflowService$get(ctx$workflowId)
+  
+  fileDoc = FileDocument$new()
+  fileDoc$name = filename
+  fileDoc$projectId = workflow$projectId
+  fileDoc$acl$owner = workflow$acl$owner
+  fileDoc$metadata$contentType = 'application/octet-stream'
+  
+  metaWorkflowId = Pair$new()
+  metaWorkflowId$key = 'workflow.id'
+  metaWorkflowId$value = ctx$workflowId
+  
+  metaStepId = Pair$new()
+  metaStepId$key = 'step.id'
+  metaStepId$value = ctx$stepId
+  
+  fileDoc$meta = list(metaWorkflowId, metaStepId)
+  
+  con = rawConnection(raw(0), "r+")
+  saveRDS(object, file=con)
+  bytes = rawConnectionValue(con)
+  
+  fileDoc = ctx$client$fileService$upload(fileDoc, bytes)
+  return(fileDoc$id)
+}
+
+get_FlowSOM_Clusters <- function(data, ctx) {
+  colnames(data) <- ctx$rselect()[[1]]
+  
+  flow.dat <- flowCore::flowFrame(as.matrix(data))
+  
+  n.clust <- NULL
+  if(!is.null(ctx$op.value('nclust')) && !ctx$op.value('nclust') == "NULL") n.clust <- as.integer(ctx$op.value('nclust'))
+  
+  seed <- NULL
+  if(!is.null(ctx$op.value('seed')) && !ctx$op.value('seed') == "NULL") seed <- as.integer(ctx$op.value('seed'))
+  
+  xdim   = ifelse(is.null(ctx$op.value('xdim')), 10, as.integer(ctx$op.value('xdim')))
+  ydim   = ifelse(is.null(ctx$op.value('ydim')), 10, as.integer(ctx$op.value('ydim')))
+  rlen   = ifelse(is.null(ctx$op.value('rlen')), 10, as.integer(ctx$op.value('rlen')))
+  mst    = ifelse(is.null(ctx$op.value('mst')), 1, as.integer(ctx$op.value('mst')))
+  alpha  = c(
+    ifelse(is.null(ctx$op.value('alpha_1')), 0.05, as.double(ctx$op.value('alpha_1'))),
+    ifelse(is.null(ctx$op.value('alpha_2')), 0.01, as.double(ctx$op.value('alpha_2')))
+  )
+  distf  = ifelse(is.null(ctx$op.value('distf')), 2, as.integer(ctx$op.value('distf')))
+  maxMeta  = ifelse(is.null(ctx$op.value('maxMeta')), 10, as.integer(ctx$op.value('maxMeta')))
+  
+  fsom <- FlowSOM(
+    input = flow.dat,
+    compensate = FALSE,
+    colsToUse = 1:ncol(flow.dat),
+    nClus = n.clust,
+    maxMeta = maxMeta,
+    seed = seed,
+    xdim = xdim,
+    ydim = ydim, 
+    rlen = rlen, 
+    mst = mst, 
+    alpha = alpha,
+    distf = distf
+  )
+  
+  fname <- paste0("FlowSOM_model_", ctx$stepId)
+  model_documentId <- save_rds(fsom, fname, ctx)
+  df_out <- data.frame(
+    cluster_id = as.character(fsom[[2]][fsom[[1]]$map$mapping[, 1]]),
+    model_documentId = model_documentId
+  )
+  return(df_out)
+}
+
 ctx <- tercenCtx()
-(ctx = tercenCtx()) %>% 
-  select(.ga.gs0.variable)
-(ctx = tercenCtx())  %>% 
-  select(.y, .ci, .ri) %>% 
-  group_by(.ci, .ri) %>%
-  summarise(median = median(.y)) %>%
+
+ctx %>% 
+  as.matrix() %>%
+  t() %>%
+  get_FlowSOM_Clusters(., ctx) %>%
+  as_tibble() %>%
+  mutate(.ci = seq_len(nrow(.))-1) %>%
   ctx$addNamespace() %>%
   ctx$save()
-
-dir <- "/home/rstudio/projects/CytoNorm/Cytonorm_operator"
-files <- list.files(dir, pattern = "fcs$")
-data <- data.frame(File = files,
-                   Path = file.path(dir, files),
-                   Type = stringr::str_match(files, "_([12]).fcs")[, 2],
-                   Batch = stringr::str_match(files, "PTLG[0-9]*")[, 1],
-                   stringsAsFactors = FALSE)
-data$Type <- c("1" = "Train", "2" = "Validation")[data$Type]
-# 
-# train_data <- dplyr::filter(data, Type == "Train")
-# validation_data <- dplyr::filter(data, Type == "Validation")
-# 
-# ff <- flowCore::read.FCS(data$Path[1])
-# channels <- flowCore::colnames(ff)[c(48, 46, 43, 45, 20, 16, 21, 19, 22, 50, 47,
-#                                      40, 44, 33, 17, 11, 18, 51, 14, 23, 32, 10,
-#                                      49, 27, 24, 31, 42, 37, 39, 34, 41, 26, 30, 
-#                                      28, 29, 25, 35)]
-# transformList <- flowCore::transformList(channels,
-#                                          cytofTransform)
-# transformList.reverse <- flowCore::transformList(channels,
-#                                                  cytofTransform.reverse)
-# fsom <- prepareFlowSOM(train_data$Path,
-#                        channels,
-#                        nCells = 6000,
-#                        FlowSOM.params = list(xdim = 5,
-#                                              ydim = 5,
-#                                              nClus = 10,
-#                                              scale = FALSE),
-#                        transformList = transformList,
-#                        seed = 1)
-# 
-# cvs <- testCV(fsom,
-#               cluster_values = c(5, 10, 15)) 
-# 
-# cvs$pctgs$`10`
