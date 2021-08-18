@@ -4,95 +4,160 @@ library(flowCore)
 library(FlowSOM)
 library(devtools)
 install_github('saeyslab/CytoNorm')
+library(CytoNorm)
 
 
 
 options("tercen.workflowId" = "c760adb979f713659d9e4826b004a670")
-options("tercen.stepId"     = "2b534492-09da-4d7b-a93b-25a32aaee591")
+options("tercen.stepId"     = "5deafcbd-8d1a-4a40-b14c-7e8b8b4795b6")
 
 getOption("tercen.workflowId")
 getOption("tercen.stepId")
 
-save_rds <- function(object, filename, ctx) {
-  
-  workflow <- ctx$client$workflowService$get(ctx$workflowId)
-  
-  fileDoc = FileDocument$new()
-  fileDoc$name = filename
-  fileDoc$projectId = workflow$projectId
-  fileDoc$acl$owner = workflow$acl$owner
-  fileDoc$metadata$contentType = 'application/octet-stream'
-  
-  metaWorkflowId = Pair$new()
-  metaWorkflowId$key = 'workflow.id'
-  metaWorkflowId$value = ctx$workflowId
-  
-  metaStepId = Pair$new()
-  metaStepId$key = 'step.id'
-  metaStepId$value = ctx$stepId
-  
-  fileDoc$meta = list(metaWorkflowId, metaStepId)
-  
-  con = rawConnection(raw(0), "r+")
-  saveRDS(object, file=con)
-  bytes = rawConnectionValue(con)
-  
-  fileDoc = ctx$client$fileService$upload(fileDoc, bytes)
-  return(fileDoc$id)
+############################### FUNCTION
+fcs_to_data = function(filename, which.lines) {
+  data_fcs = read.FCS(filename, which.lines, transformation = FALSE)
+  names_parameters = data_fcs@parameters@data$desc
+  data = as.data.frame(exprs(data_fcs))
+  col_names = colnames(data)
+  names_parameters = ifelse(is.na(names_parameters),col_names,names_parameters)
+  colnames(data) = names_parameters
+  data %>%
+    mutate_if(is.logical, as.character) %>%
+    mutate_if(is.integer, as.double) %>%
+    mutate(.ci = rep_len(0, nrow(.))) %>%
+    mutate(filename = rep_len(basename(filename), nrow(.)))
 }
 
-get_FlowSOM_Clusters <- function(data, ctx) {
-  colnames(data) <- ctx$rselect()[[1]]
+############################## read FCS files
+ctx <- tercenCtx()
+
+
+df <- ctx$cselect()
+
+
+which.lines <- NULL
+if(!is.null(ctx$op.value('which.lines')) && !ctx$op.value('which.lines') == "NULL") which.lines <- as.integer(ctx$op.value('which.lines'))
+f.names<-NULL
+docId = df$J.Documentid[1]
+for (docId in  df$J.Documentid){
   
-  flow.dat <- flowCore::flowFrame(as.matrix(data))
+  #substr(docId,1,nchar(docId)-1)
+  doc = ctx$client$fileService$get(substr(docId,1,nchar(docId)-1))
+  filename = tempfile(fileext = ".fcs")
+  writeBin(ctx$client$fileService$download(substr(docId,1,nchar(docId)-1)), filename)
+  on.exit(unlink(filename))
   
-  n.clust <- NULL
-  if(!is.null(ctx$op.value('nclust')) && !ctx$op.value('nclust') == "NULL") n.clust <- as.integer(ctx$op.value('nclust'))
   
-  seed <- NULL
-  if(!is.null(ctx$op.value('seed')) && !ctx$op.value('seed') == "NULL") seed <- as.integer(ctx$op.value('seed'))
+  # unzip if archive
+  if(length(grep(".zip", doc$name)) > 0) {
+    tmpdir <- tempfile( fileext = ".fcs")
+    unzip(filename, exdir = tmpdir)
+    f.names <- list.files(tmpdir, full.names = TRUE)
+  } else {
+    f.names <- c(f.names,filename)
+  }
   
-  xdim   = ifelse(is.null(ctx$op.value('xdim')), 10, as.integer(ctx$op.value('xdim')))
-  ydim   = ifelse(is.null(ctx$op.value('ydim')), 10, as.integer(ctx$op.value('ydim')))
-  rlen   = ifelse(is.null(ctx$op.value('rlen')), 10, as.integer(ctx$op.value('rlen')))
-  mst    = ifelse(is.null(ctx$op.value('mst')), 1, as.integer(ctx$op.value('mst')))
-  alpha  = c(
-    ifelse(is.null(ctx$op.value('alpha_1')), 0.05, as.double(ctx$op.value('alpha_1'))),
-    ifelse(is.null(ctx$op.value('alpha_2')), 0.01, as.double(ctx$op.value('alpha_2')))
-  )
-  distf  = ifelse(is.null(ctx$op.value('distf')), 2, as.integer(ctx$op.value('distf')))
-  maxMeta  = ifelse(is.null(ctx$op.value('maxMeta')), 10, as.integer(ctx$op.value('maxMeta')))
+  # check FCS
+  if(any(!isFCSfile(f.names))) stop("Not all imported files are FCS files.")
   
-  fsom <- FlowSOM(
-    input = flow.dat,
-    compensate = FALSE,
-    colsToUse = 1:ncol(flow.dat),
-    nClus = n.clust,
-    maxMeta = maxMeta,
-    seed = seed,
-    xdim = xdim,
-    ydim = ydim, 
-    rlen = rlen, 
-    mst = mst, 
-    alpha = alpha,
-    distf = distf
-  )
+  assign("actual", 0, envir = .GlobalEnv)
+  task = ctx$task
   
-  fname <- paste0("FlowSOM_model_", ctx$stepId)
-  model_documentId <- save_rds(fsom, fname, ctx)
-  df_out <- data.frame(
-    cluster_id = as.character(fsom[[2]][fsom[[1]]$map$mapping[, 1]]),
-    model_documentId = model_documentId
-  )
-  return(df_out)
+  # f.names %>%
+  #   lapply(function(filename){
+  #     data = fcs_to_data(filename, which.lines)
+  #     if (!is.null(task)) {
+  #       # task is null when run from RStudio
+  #       actual = get("actual",  envir = .GlobalEnv) + 1
+  #       assign("actual", actual, envir = .GlobalEnv)
+  #       evt = TaskProgressEvent$new()
+  #       evt$taskId = task$id
+  #       evt$total = length(f.names)
+  #       evt$actual = actual
+  #       evt$message = paste0('processing FCS file ' , filename)
+  #       ctx$client$eventService$sendChannel(task$channelId, evt)
+  #     } else {
+  #       cat('processing FCS file ' , filename)
+  #     }
+  #     data
+  #   })
 }
+############################## cytonorm
+
+files <- f.names
+data <- data.frame(File = files,
+                   #Path = file.path(dir, files),
+                   Type = df$J.type,
+                   Batch = df$J.filename,
+                   stringsAsFactors = FALSE)
+
+train_data <- dplyr::filter(data, Type == "train")
+validation_data <- dplyr::filter(data, Type == "validation")
+
+#file.path(normalizePath(paste(dirname(data$Path[1]), basename(data$Path[1]), sep="/")))
+#ff = read.FCS(data$File[1], which.lines, transformation = FALSE)
+
+ff <- flowCore::read.FCS(data$File[1])
+channels <- flowCore::colnames(ff)[c(3:55)]
+transformList <- flowCore::transformList(channels,
+                                         cytofTransform)
+transformList.reverse <- flowCore::transformList(channels,
+                                                 cytofTransform.reverse)
+############################
+fsom <- prepareFlowSOM(train_data$File,
+                       channels,
+                       nCells = 6000,
+                       FlowSOM.params = list(xdim = 5,
+                                             ydim = 5,
+                                             nClus = 10,
+                                             scale = FALSE),
+                       transformList = transformList,
+                       seed = 1)
+
+cvs <- testCV(fsom,
+              cluster_values = c(5, 10, 15)) 
+
+cvs$pctgs$`10`
+###########################
+model <- CytoNorm.train(files = train_data$File,
+                        labels = train_data$Batch,
+                        channels = channels,
+                        transformList = transformList,
+                        FlowSOM.params = list(nCells = 6000, 
+                                              xdim = 5,
+                                              ydim = 5,
+                                              nClus = 10,
+                                              scale = FALSE),
+                        normMethod.train = QuantileNorm.train,
+                        normParams = list(nQ = 101,
+                                          goal = "mean"),
+                        seed = 1,
+                        verbose = TRUE)
+##########################
+CytoNorm.normalize(model = model,
+                   files = validation_data$Path,
+                   labels = validation_data$Batch,
+                   transformList = transformList,
+                   transformList.reverse = transformList.reverse,
+                   normMethod.normalize = QuantileNorm.normalize,
+                   outputDir = "Normalized",
+                   prefix = "Norm_",
+                   clean = TRUE,
+                   verbose = TRUE)
+
+
+
+
+#############################
 
 ctx <- tercenCtx()
 
 ctx %>% 
   as.matrix() %>%
   t() %>%
-  get_FlowSOM_Clusters(., ctx) %>%
+  print(.)
+get_FlowSOM_Clusters(., ctx) %>%
   as_tibble() %>%
   mutate(.ci = seq_len(nrow(.))-1) %>%
   ctx$addNamespace() %>%
