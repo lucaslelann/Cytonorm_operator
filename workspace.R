@@ -93,7 +93,7 @@ data <- data.frame(File = files,
                    stringsAsFactors = FALSE)
 
 train_data <- dplyr::filter(data, Type == "train")
-validation_data <- dplyr::filter(data, Type == "validation")
+validation_data <- dplyr::filter(data, Type == "validate")
 
 #file.path(normalizePath(paste(dirname(data$Path[1]), basename(data$Path[1]), sep="/")))
 #ff = read.FCS(data$File[1], which.lines, transformation = FALSE)
@@ -115,8 +115,7 @@ fsom <- prepareFlowSOM(train_data$File,
                        transformList = transformList,
                        seed = 1)
 
-cvs <- testCV(fsom,
-              cluster_values = c(5, 10, 15)) 
+cvs <- testCV(fsom, cluster_values = c(5, 10, 15)) 
 
 cvs$pctgs$`10`
 ###########################
@@ -136,7 +135,7 @@ model <- CytoNorm.train(files = train_data$File,
                         verbose = TRUE)
 ##########################
 CytoNorm.normalize(model = model,
-                   files = validation_data$Path,
+                   files = validation_data$File,
                    labels = validation_data$Batch,
                    transformList = transformList,
                    transformList.reverse = transformList.reverse,
@@ -150,6 +149,14 @@ CytoNorm.normalize(model = model,
 
 
 #############################
+
+
+PlotStars(fsom$FlowSOM)
+p <- PlotMarker(fsom$FlowSOM, "beadDist")
+print(p, newpage = FALSE)
+
+
+
 
 ctx <- tercenCtx()
 
