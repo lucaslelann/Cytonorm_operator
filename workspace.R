@@ -1,9 +1,10 @@
+install_github('saeyslab/CytoNorm')
+
 library(tercen)
 library(dplyr)
 library(flowCore)
 library(FlowSOM)
 library(devtools)
-install_github('saeyslab/CytoNorm')
 library(CytoNorm)
 
 
@@ -28,6 +29,8 @@ fcs_to_data = function(filename, which.lines) {
     mutate(.ci = rep_len(0, nrow(.))) %>%
     mutate(filename = rep_len(basename(filename), nrow(.)))
 }
+
+
 
 ############################## read FCS files
 ctx <- tercenCtx()
@@ -86,19 +89,19 @@ for (docId in  df$J.Documentid){
 ############################## cytonorm
 
 files <- f.names
-data <- data.frame(File = files,
+data.input <- data.frame(File = files,
                    #Path = file.path(dir, files),
                    Type = df$J.type,
                    Batch = df$J.filename,
                    stringsAsFactors = FALSE)
 
-train_data <- dplyr::filter(data, Type == "train")
-validation_data <- dplyr::filter(data, Type == "validation")
+train_data <- dplyr::filter(data.input , Type == "train")
+validation_data <- dplyr::filter(data.input , Type == "validate")
 
-#file.path(normalizePath(paste(dirname(data$Path[1]), basename(data$Path[1]), sep="/")))
-#ff = read.FCS(data$File[1], which.lines, transformation = FALSE)
+#file.path(normalizePath(paste(dirname(data.input $Path[1]), basename(data.input $Path[1]), sep="/")))
+#ff = read.FCS(data.input $File[1], which.lines, transformation = FALSE)
 
-ff <- flowCore::read.FCS(data$File[1])
+ff <- flowCore::read.FCS(data.input $File[1])
 channels <- flowCore::colnames(ff)[c(3:55)]
 transformList <- flowCore::transformList(channels,
                                          cytofTransform)
@@ -115,8 +118,7 @@ fsom <- prepareFlowSOM(train_data$File,
                        transformList = transformList,
                        seed = 1)
 
-cvs <- testCV(fsom,
-              cluster_values = c(5, 10, 15)) 
+cvs <- testCV(fsom, cluster_values = c(5, 10, 15)) 
 
 cvs$pctgs$`10`
 ###########################
@@ -136,7 +138,7 @@ model <- CytoNorm.train(files = train_data$File,
                         verbose = TRUE)
 ##########################
 CytoNorm.normalize(model = model,
-                   files = validation_data$Path,
+                   files = validation_data$File,
                    labels = validation_data$Batch,
                    transformList = transformList,
                    transformList.reverse = transformList.reverse,
@@ -151,14 +153,44 @@ CytoNorm.normalize(model = model,
 
 #############################
 
-ctx <- tercenCtx()
 
-ctx %>% 
-  as.matrix() %>%
-  t() %>%
-  print(.)
-get_FlowSOM_Clusters(., ctx) %>%
-  as_tibble() %>%
-  mutate(.ci = seq_len(nrow(.))-1) %>%
+# PlotStars(fsom$FlowSOM)
+# p <- PlotMarker(fsom$FlowSOM, "beadDist")
+# print(p, newpage = FALSE)
+
+
+##########################
+
+
+f.names<- paste("./Normalized/",list.files(path="./Normalized", pattern="Norm_"), sep="")
+test.fun<-f.names%>%
+    lapply(function(filename){
+      data = fcs_to_data(filename, which.lines)
+      if (!is.null(task)) {
+        # task is null when run from RStudio
+        actual = get("actual",  envir = .GlobalEnv) + 1
+        assign("actual", actual, envir = .GlobalEnv)
+        evt = TaskProgressEvent$new()
+        evt$taskId = task$id
+        evt$total = length(f.names)
+        evt$actual = actual
+        evt$message = paste0('processing FCS file ' , filename)
+        ctx$client$eventService$sendChannel(task$channelId, evt)
+      } else {
+        cat('processing FCS file ' , filename)
+      }
+      data
+    }) %>%
+    bind_rows() 
+
+
+  for (i in c(1:length(data.input$File))){
+    test.fun$filename[grepl(strsplit(data.input$File,"/")[[i]][4], test.fun$filename)] <- data.input$Batch[[i]]
+  } 
+
+  
+  test.fun%>%
   ctx$addNamespace() %>%
   ctx$save()
+
+  unlink("Normalized",recursive = TRUE)
