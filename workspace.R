@@ -95,8 +95,13 @@ data.input <- data.frame(File = files,
                    Batch = df$J.filename,
                    stringsAsFactors = FALSE)
 
+<<<<<<< HEAD
 train_data <- dplyr::filter(data.input , Type == "train")
 validation_data <- dplyr::filter(data.input , Type == "validate")
+=======
+train_data <- dplyr::filter(data, Type == "train")
+validation_data <- dplyr::filter(data, Type == "validate")
+>>>>>>> 97811b1a5cad06ee5417f1535da81b011d03c6a8
 
 #file.path(normalizePath(paste(dirname(data.input $Path[1]), basename(data.input $Path[1]), sep="/")))
 #ff = read.FCS(data.input $File[1], which.lines, transformation = FALSE)
@@ -153,6 +158,18 @@ CytoNorm.normalize(model = model,
 
 #############################
 
+<<<<<<< HEAD
+=======
+
+PlotStars(fsom$FlowSOM)
+p <- PlotMarker(fsom$FlowSOM, "beadDist")
+print(p, newpage = FALSE)
+
+
+
+
+ctx <- tercenCtx()
+>>>>>>> 97811b1a5cad06ee5417f1535da81b011d03c6a8
 
 # PlotStars(fsom$FlowSOM)
 # p <- PlotMarker(fsom$FlowSOM, "beadDist")
