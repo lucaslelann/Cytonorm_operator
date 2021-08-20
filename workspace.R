@@ -78,9 +78,22 @@ data.input <- data.frame(File = f.names,
                    Batch = df$J.filename,
                    stringsAsFactors = FALSE)
 
+<<<<<<< HEAD
 # separation of the data in training and validation dataset
 train_data <- dplyr::filter(data.input , Type == "train")
 validation_data <- dplyr::filter(data.input , Type == "validate")
+=======
+<<<<<<< HEAD
+train_data <- dplyr::filter(data.input , Type == "train")
+validation_data <- dplyr::filter(data.input , Type == "validate")
+=======
+train_data <- dplyr::filter(data, Type == "train")
+validation_data <- dplyr::filter(data, Type == "validate")
+>>>>>>> 97811b1a5cad06ee5417f1535da81b011d03c6a8
+
+#file.path(normalizePath(paste(dirname(data.input $Path[1]), basename(data.input $Path[1]), sep="/")))
+#ff = read.FCS(data.input $File[1], which.lines, transformation = FALSE)
+>>>>>>> 47ce32a4f14af1b01317a8ff19a8189a88c471ca
 
 # Open 1 of the flow cytometry files to get the channels and set uo the tranformation
 ff <- flowCore::read.FCS(data.input $File[1])
@@ -135,7 +148,35 @@ CytoNorm.normalize(model = model,
 
 ############################# Output
 
+<<<<<<< HEAD
 # transformation of the Normalized fcs files into table
+=======
+
+
+#############################
+
+<<<<<<< HEAD
+=======
+
+PlotStars(fsom$FlowSOM)
+p <- PlotMarker(fsom$FlowSOM, "beadDist")
+print(p, newpage = FALSE)
+
+
+
+
+ctx <- tercenCtx()
+>>>>>>> 97811b1a5cad06ee5417f1535da81b011d03c6a8
+
+# PlotStars(fsom$FlowSOM)
+# p <- PlotMarker(fsom$FlowSOM, "beadDist")
+# print(p, newpage = FALSE)
+
+
+##########################
+
+
+>>>>>>> 47ce32a4f14af1b01317a8ff19a8189a88c471ca
 f.names<- paste("./Normalized/",list.files(path="./Normalized", pattern="Norm_"), sep="")
 test.fun<-f.names%>%
     lapply(function(filename){
