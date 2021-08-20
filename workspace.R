@@ -164,7 +164,7 @@ test.fun<-f.names%>%
 
 
   test.fun%>%
- # as.matrix()%>%
+ 
   ctx$addNamespace()  %>%
   ctx$save()
 
