@@ -16,6 +16,9 @@ getOption("tercen.workflowId")
 getOption("tercen.stepId")
 
 ############################### FUNCTION
+# fcs_to_data
+# input filename of fcs data
+# output dataframe of the fcs data
 fcs_to_data = function(filename, which.lines) {
   data_fcs = read.FCS(filename, which.lines, transformation = FALSE)
   names_parameters = data_fcs@parameters@data$desc
@@ -33,24 +36,23 @@ fcs_to_data = function(filename, which.lines) {
 
 
 ############################## read FCS files
+
+# get the input from tercen
 ctx <- tercenCtx()
-
-
 df <- ctx$cselect()
-
 
 which.lines <- NULL
 if(!is.null(ctx$op.value('which.lines')) && !ctx$op.value('which.lines') == "NULL") which.lines <- as.integer(ctx$op.value('which.lines'))
 f.names<-NULL
 docId = df$J.Documentid[1]
+
+#create temporary file 
+
 for (docId in  df$J.Documentid){
-  
-  #substr(docId,1,nchar(docId)-1)
   doc = ctx$client$fileService$get(substr(docId,1,nchar(docId)-1))
   filename = tempfile(fileext = ".fcs")
   writeBin(ctx$client$fileService$download(substr(docId,1,nchar(docId)-1)), filename)
   on.exit(unlink(filename))
-  
   
   # unzip if archive
   if(length(grep(".zip", doc$name)) > 0) {
@@ -67,47 +69,27 @@ for (docId in  df$J.Documentid){
   assign("actual", 0, envir = .GlobalEnv)
   task = ctx$task
   
-  # f.names %>%
-  #   lapply(function(filename){
-  #     data = fcs_to_data(filename, which.lines)
-  #     if (!is.null(task)) {
-  #       # task is null when run from RStudio
-  #       actual = get("actual",  envir = .GlobalEnv) + 1
-  #       assign("actual", actual, envir = .GlobalEnv)
-  #       evt = TaskProgressEvent$new()
-  #       evt$taskId = task$id
-  #       evt$total = length(f.names)
-  #       evt$actual = actual
-  #       evt$message = paste0('processing FCS file ' , filename)
-  #       ctx$client$eventService$sendChannel(task$channelId, evt)
-  #     } else {
-  #       cat('processing FCS file ' , filename)
-  #     }
-  #     data
-  #   })
 }
-############################## cytonorm
+############################## CytoNorm
 
-files <- f.names
-data.input <- data.frame(File = files,
+data.input <- data.frame(File = f.names,
                    #Path = file.path(dir, files),
                    Type = df$J.type,
                    Batch = df$J.filename,
                    stringsAsFactors = FALSE)
 
+# separation of the data in training and validation dataset
 train_data <- dplyr::filter(data.input , Type == "train")
 validation_data <- dplyr::filter(data.input , Type == "validate")
 
-#file.path(normalizePath(paste(dirname(data.input $Path[1]), basename(data.input $Path[1]), sep="/")))
-#ff = read.FCS(data.input $File[1], which.lines, transformation = FALSE)
-
+# Open 1 of the flow cytometry files to get the channels and set uo the tranformation
 ff <- flowCore::read.FCS(data.input $File[1])
 channels <- flowCore::colnames(ff)[c(3:55)]
 transformList <- flowCore::transformList(channels,
                                          cytofTransform)
 transformList.reverse <- flowCore::transformList(channels,
                                                  cytofTransform.reverse)
-############################
+############################ Preparation 
 fsom <- prepareFlowSOM(train_data$File,
                        channels,
                        nCells = 6000,
@@ -121,7 +103,7 @@ fsom <- prepareFlowSOM(train_data$File,
 cvs <- testCV(fsom, cluster_values = c(5, 10, 15)) 
 
 cvs$pctgs$`10`
-###########################
+########################### Model determination
 model <- CytoNorm.train(files = train_data$File,
                         labels = train_data$Batch,
                         channels = channels,
@@ -136,7 +118,10 @@ model <- CytoNorm.train(files = train_data$File,
                                           goal = "mean"),
                         seed = 1,
                         verbose = TRUE)
-##########################
+
+
+########################## Application of CytoNorm
+
 CytoNorm.normalize(model = model,
                    files = validation_data$File,
                    labels = validation_data$Batch,
@@ -148,20 +133,9 @@ CytoNorm.normalize(model = model,
                    clean = TRUE,
                    verbose = TRUE)
 
+############################# Output
 
-
-
-#############################
-
-
-# PlotStars(fsom$FlowSOM)
-# p <- PlotMarker(fsom$FlowSOM, "beadDist")
-# print(p, newpage = FALSE)
-
-
-##########################
-
-
+# transformation of the Normalized fcs files into table
 f.names<- paste("./Normalized/",list.files(path="./Normalized", pattern="Norm_"), sep="")
 test.fun<-f.names%>%
     lapply(function(filename){
@@ -183,14 +157,15 @@ test.fun<-f.names%>%
     }) %>%
     bind_rows() 
 
-
+# replace the documenId for the file names 
   for (i in c(1:length(data.input$File))){
     test.fun$filename[grepl(strsplit(data.input$File,"/")[[i]][4], test.fun$filename)] <- data.input$Batch[[i]]
   } 
 
-  
+
   test.fun%>%
-  ctx$addNamespace() %>%
+ # as.matrix()%>%
+  ctx$addNamespace()  %>%
   ctx$save()
 
   unlink("Normalized",recursive = TRUE)
