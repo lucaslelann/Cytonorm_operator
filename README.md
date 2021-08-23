@@ -10,10 +10,9 @@ Input projection|.
 ---|---
 `x-axis`        | type, description 
 `y-axis`        | type, description 
-`row`           | type, description 
-`column`        | type, description 
-`colors`        | type, description 
-`labels`        | type, description 
+`row`           | type, rowId 
+`column`        | type, joined.DocumentId,Joined.filename and joined.Type 
+
 
 Input parameters|.
 ---|---
@@ -30,7 +29,5 @@ Details on the computation.
 
 ##### See Also
 
-[template_shiny_operator](https://github.com/tercen/template_shiny_operator)
-, [template_docker_operator](https://github.com/tercen/template_docker_operator)
-, [CytoNorm](https://github.com/saeyslab/CytoNorm)
+[CytoNorm](https://github.com/saeyslab/CytoNorm)
 
