@@ -1,4 +1,3 @@
-install_github('saeyslab/CytoNorm')
 
 library(tercen)
 library(dplyr)
