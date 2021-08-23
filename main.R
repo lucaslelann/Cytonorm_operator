@@ -4,7 +4,6 @@ library(dplyr)
 library(flowCore)
 library(FlowSOM)
 library(devtools)
-#install_github('saeyslab/CytoNorm')
 library(CytoNorm)
 
 
