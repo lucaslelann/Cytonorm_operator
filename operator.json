@@ -1,9 +1,9 @@
 {
   "name": "cytonorm",
   "description": "R library to normalize cytometry data",
-  "tags": ["import"],
+  "tags": ["flow cytometry", "normalization"],
   "authors": ["tercen"],
-  "urls": ["https://github.com/tercen/template_R_operator"],
+  "urls": ["https://github.com/tercen/cytonorm_operator"],
   "properties": [  ]
 }
 
