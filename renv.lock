@@ -165,10 +165,10 @@
     },
     "R6": {
       "Package": "R6",
-      "Version": "2.5.0",
+      "Version": "2.5.1",
       "Source": "Repository",
-      "Repository": "RSPM",
-      "Hash": "b203113193e70978a696b2809525649d"
+      "Repository": "CRAN",
+      "Hash": "470851b6d5d0ac559e9d01bb352b4021"
     },
     "RBGL": {
       "Package": "RBGL",
@@ -185,10 +185,10 @@
     },
     "RCurl": {
       "Package": "RCurl",
-      "Version": "1.98-1.3",
+      "Version": "1.98-1.4",
       "Source": "Repository",
       "Repository": "CRAN",
-      "Hash": "ddac9abbfba243f9aeab9b5680b968d3"
+      "Hash": "e43588d9fa3aa87ca9ee96450e810895"
     },
     "RProtoBufLib": {
       "Package": "RProtoBufLib",
@@ -244,10 +244,10 @@
     },
     "XML": {
       "Package": "XML",
-      "Version": "3.99-0.6",
+      "Version": "3.99-0.7",
       "Source": "Repository",
       "Repository": "CRAN",
-      "Hash": "59b7d0a3d18303ae30ba1246e77faa83"
+      "Hash": "09776593e3e9d555fbd10fe98781103a"
     },
     "ash": {
       "Package": "ash",
@@ -307,10 +307,10 @@
     },
     "cachem": {
       "Package": "cachem",
-      "Version": "1.0.5",
+      "Version": "1.0.6",
       "Source": "Repository",
       "Repository": "CRAN",
-      "Hash": "5346f76a33eb7417812c270b04a5581b"
+      "Hash": "648c5b3d71e6a37e3043617489a0a0e9"
     },
     "callr": {
       "Package": "callr",
@@ -367,6 +367,13 @@
       "Source": "Repository",
       "Repository": "CRAN",
       "Hash": "ae01381679f4511ca7a72d55fe175213"
+    },
+    "cpp11": {
+      "Package": "cpp11",
+      "Version": "0.3.1",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "e02edab2bc389c5e4b12949b13df44f2"
     },
     "crayon": {
       "Package": "crayon",
@@ -546,10 +553,10 @@
     },
     "gert": {
       "Package": "gert",
-      "Version": "1.3.1",
+      "Version": "1.4.0",
       "Source": "Repository",
       "Repository": "CRAN",
-      "Hash": "8612346a70ca2b2bebb0ef008d5c0e30"
+      "Hash": "4c26313703f752337ba9b553baf0e0b2"
     },
     "ggcyto": {
       "Package": "ggcyto",
@@ -684,10 +691,10 @@
     },
     "knitr": {
       "Package": "knitr",
-      "Version": "1.33",
+      "Version": "1.34",
       "Source": "Repository",
       "Repository": "CRAN",
-      "Hash": "0bc1b5da1b0eb07cd4b727e95e9ff0b8"
+      "Hash": "aa958054ac6f0360926bb952ea302f0f"
     },
     "ks": {
       "Package": "ks",
@@ -738,19 +745,12 @@
       "Repository": "RSPM",
       "Hash": "41287f1ac7d28a92f0a286ed507928d3"
     },
-    "markdown": {
-      "Package": "markdown",
-      "Version": "1.1",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Hash": "61e4a10781dd00d7d81dd06ca9b94e95"
-    },
     "matrixStats": {
       "Package": "matrixStats",
-      "Version": "0.60.0",
+      "Version": "0.60.1",
       "Source": "Repository",
       "Repository": "CRAN",
-      "Hash": "915f59111573046dc425410b435ab5ed"
+      "Hash": "c3cd22becabe4f29ee047221cc2b89ae"
     },
     "mclust": {
       "Package": "mclust",
@@ -830,10 +830,10 @@
     },
     "nlme": {
       "Package": "nlme",
-      "Version": "3.1-152",
+      "Version": "3.1-153",
       "Source": "Repository",
       "Repository": "CRAN",
-      "Hash": "35de1ce639f20b5e10f7f46260730c65"
+      "Hash": "2d632e0d963a653a0329756ce701ecdd"
     },
     "openCyto": {
       "Package": "openCyto",
@@ -843,10 +843,10 @@
     },
     "openssl": {
       "Package": "openssl",
-      "Version": "1.4.4",
+      "Version": "1.4.5",
       "Source": "Repository",
       "Repository": "CRAN",
-      "Hash": "f4dbc5a47fd93d3415249884d31d6791"
+      "Hash": "5406fd37ef0bf9b88c8a4f264d6ec220"
     },
     "pcaPP": {
       "Package": "pcaPP",
@@ -885,10 +885,10 @@
     },
     "pkgload": {
       "Package": "pkgload",
-      "Version": "1.2.1",
+      "Version": "1.2.2",
       "Source": "Repository",
       "Repository": "CRAN",
-      "Hash": "463642747f81879e6752485aefb831cf"
+      "Hash": "53139eedf68b98eecd5289664969c3f2"
     },
     "plot3D": {
       "Package": "plot3D",
@@ -1011,10 +1011,10 @@
     },
     "roxygen2": {
       "Package": "roxygen2",
-      "Version": "7.1.1",
+      "Version": "7.1.2",
       "Source": "Repository",
       "Repository": "CRAN",
-      "Hash": "fcd94e00cc409b25d07ca50f7bf339f5"
+      "Hash": "eb9849556c4250305106e82edae35b72"
     },
     "rprojroot": {
       "Package": "rprojroot",
@@ -1025,10 +1025,10 @@
     },
     "rrcov": {
       "Package": "rrcov",
-      "Version": "1.5-5",
+      "Version": "1.6-0",
       "Source": "Repository",
       "Repository": "CRAN",
-      "Hash": "09336b5ca5e99b7c2d0d5b2e344f3c76"
+      "Hash": "2c84a58e990d66cf1e6cbf7c2b6e7ea0"
     },
     "rstudioapi": {
       "Package": "rstudioapi",
@@ -1060,10 +1060,10 @@
     },
     "stringi": {
       "Package": "stringi",
-      "Version": "1.7.3",
+      "Version": "1.7.4",
       "Source": "Repository",
       "Repository": "CRAN",
-      "Hash": "7943cfae120c77a255025e5f63856532"
+      "Hash": "ebaccb577da50829a3bb1b8296f318a5"
     },
     "stringr": {
       "Package": "stringr",
@@ -1102,10 +1102,10 @@
     },
     "tibble": {
       "Package": "tibble",
-      "Version": "3.1.3",
+      "Version": "3.1.4",
       "Source": "Repository",
       "Repository": "CRAN",
-      "Hash": "038455513fde65e79c25e724e0c84ca2"
+      "Hash": "5e8ad5621e5c94b24ec07b88eee13df8"
     },
     "tidyselect": {
       "Package": "tidyselect",
@@ -1158,10 +1158,10 @@
     },
     "waldo": {
       "Package": "waldo",
-      "Version": "0.2.5",
+      "Version": "0.3.1",
       "Source": "Repository",
       "Repository": "CRAN",
-      "Hash": "20c45f1d511a3f730b7b469f4d11e104"
+      "Hash": "ad8cfff5694ac5b3c354f8f2044bd976"
     },
     "whisker": {
       "Package": "whisker",
@@ -1179,10 +1179,10 @@
     },
     "xfun": {
       "Package": "xfun",
-      "Version": "0.25",
+      "Version": "0.26",
       "Source": "Repository",
       "Repository": "CRAN",
-      "Hash": "853d45ffff0a9af1e0af017cd359f75e"
+      "Hash": "a270216f7ffda25e53298293046d1d05"
     },
     "xml2": {
       "Package": "xml2",
