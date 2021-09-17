@@ -13,8 +13,8 @@ RUN apt-get install -y r-cran-tcltk2
 WORKDIR /operator/cytonorm_operator 
 
 RUN git checkout master
-RUN echo 0.0.2 && git pull
-RUN git checkout 0.0.2
+RUN echo 0.0.3 && git pull
+RUN git checkout 0.0.3
 
 RUN R -e "renv::consent(provided=TRUE);renv::restore(confirm=FALSE)"
 
