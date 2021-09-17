@@ -12,7 +12,7 @@ WORKDIR /operator
 RUN apt-get update
 RUN apt-get install -y r-cran-tcltk2
 
-#RUN R -e "renv::consent(provided=TRUE);renv::restore(confirm=FALSE)"
+RUN R -e "renv::restore(confirm=FALSE)"
 
 ENV TERCEN_SERVICE_URI https://tercen.com
 
