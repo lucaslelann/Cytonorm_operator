@@ -8,7 +8,7 @@ WORKDIR /operator/
 RUN apt-get update
 RUN apt-get install -y r-cran-tcltk2
 
-#RUN git clone https://github.com/tercen/cytonorm_operator.git
+RUN git clone https://github.com/tercen/cytonorm_operator
 
 WORKDIR /operator/cytonorm_operator 
 
