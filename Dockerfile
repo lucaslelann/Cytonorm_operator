@@ -2,17 +2,16 @@
 FROM tercen/runtime-r40-slim:4.0.4-0
 
 
-USER root
-WORKDIR /operator/
+
+ENV RENV_VERSION 0.13.0
+RUN R -e "install.packages('remotes', repos = c(CRAN = 'https://cran.r-project.org'))"
+RUN R -e "remotes::install_github('rstudio/renv@${RENV_VERSION}')"
+
+COPY . /operator
+WORKDIR /operator
 
 RUN apt-get update
 RUN apt-get install -y r-cran-tcltk2
-
-WORKDIR /operator/cytonorm_operator 
-
-RUN git checkout master
-RUN echo 0.0.3 && git pull
-RUN git checkout 0.0.3
 
 RUN R -e "renv::consent(provided=TRUE);renv::restore(confirm=FALSE)"
 
