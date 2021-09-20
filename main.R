@@ -10,10 +10,7 @@ library(shiny)
 
 #docID
 #options("tercen.workflowId" = "c760adb979f713659d9e4826b004a670")
-#options("tercen.stepId"     = "5deafcbd-8d1a-4a40-b14c-7e8b8b4795b6")
-
-options("tercen.workflowId" = "c760adb979f713659d9e4826b004a670")
-options("tercen.stepId"     = "9c30d12f-7040-4ca1-a4a9-14ba31986a38")
+#options("tercen.stepId"     = "9c30d12f-7040-4ca1-a4a9-14ba31986a38")
 
 getOption("tercen.workflowId")
 getOption("tercen.stepId")
