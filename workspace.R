@@ -6,7 +6,7 @@ library(flowCore)
 library(FlowSOM)
 library(devtools)
 library(CytoNorm)
-library(shiny)
+
 
 #docID
 #options("tercen.workflowId" = "c760adb979f713659d9e4826b004a670")
