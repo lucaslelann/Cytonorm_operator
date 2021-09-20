@@ -48,8 +48,8 @@ data_all <-cbind(data_all, ctx$cselect())
 
 chan_nb <- length(ctx$rselect()[[1]])
 
-train_data <- data_all[data_all["js0.Type"]== "Train",]
-validate_data <- data_all[data_all["js0.Type"]== "control",]
+train_data <- data_all[data_all["js0.type"]== "Train",]
+validate_data <- data_all[data_all["js0.type"]== "control",]
 
 #create temporary file 
 
