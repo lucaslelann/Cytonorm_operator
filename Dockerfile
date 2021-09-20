@@ -1,5 +1,5 @@
-#FROM tercen/runtime-r40:4.0.4-1
-FROM tercen/runtime-r40-slim:4.0.4-0
+FROM tercen/runtime-r40:4.0.4-1
+#FROM tercen/runtime-r40-slim:4.0.4-0
 
 
 ENV RENV_VERSION 0.14.0
