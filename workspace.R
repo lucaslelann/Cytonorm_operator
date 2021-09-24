@@ -50,27 +50,37 @@ colnames(data_all) <- ctx$rselect()[[1]]
 data_all <-cbind(data_all, ctx$cselect())
 
 chan_nb <- length(ctx$rselect()[[1]])
+# 
+# cnames <- unlist(ctx$cnames)
+# filename_col <- (cnames[grep("[F,f]ilename", cnames)][1])
+# type_col <- (cnames[grep("[T,t]ype", cnames)][1])
 
-train_data <- data_all[data_all["js0.Type"]== "Train",]
-validate_data <- data_all[data_all["js0.Type"]== "control",]
+colnames(data_all)[grep("[T,t]ype",colnames(data_all))]<-"type"
+colnames(data_all)
+
+colnames(data_all)[grep("[F,f]ilename",colnames(data_all))]<-"filename"
+colnames(data_all)
+
+train_data <- data_all[data_all["type"]== "Train",]
+validate_data <- data_all[data_all["type"]== "control",]
 
 #create temporary file 
 
 dir.create("train")
-for (js0.filename in unique(train_data$"js0.filename"))     {
-  tmp_file_data <- train_data[train_data["js0.filename"] == js0.filename,]
+for (filename in unique(train_data$"filename"))     {
+  tmp_file_data <- train_data[train_data["filename"] == filename,]
   flow.dat <- flowCore::flowFrame(as.matrix(tmp_file_data[1:chan_nb]))
   
-  outfile<-paste("train/",js0.filename, sep="")
+  outfile<-paste("train/",filename, sep="")
   write.FCS(flow.dat, outfile)
 }
 
 dir.create("validate")
-for (js0.filename in unique(validate_data$"js0.filename"))     {
-  tmp_file_data <- train_data[validate_data["js0.filename"] == js0.filename,]
+for (filename in unique(validate_data$"filename"))     {
+  tmp_file_data <- train_data[validate_data["filename"] == filename,]
   flow.dat <- flowCore::flowFrame(as.matrix(tmp_file_data[1:chan_nb]))
   
-  outfile<-paste("validate/",js0.filename, sep="")
+  outfile<-paste("validate/",filename, sep="")
   write.FCS(flow.dat, outfile)
 }
 
