@@ -10,7 +10,7 @@ library(CytoNorm)
 
 #docID
 #options("tercen.workflowId" = "c760adb979f713659d9e4826b004a670")
-#options("tercen.stepId"     = "9c30d12f-7040-4ca1-a4a9-14ba31986a38")
+#options("tercen.stepId"     = "5deafcbd-8d1a-4a40-b14c-7e8b8b4795b6")
 
 getOption("tercen.workflowId")
 getOption("tercen.stepId")
@@ -47,27 +47,37 @@ colnames(data_all) <- ctx$rselect()[[1]]
 data_all <-cbind(data_all, ctx$cselect())
 
 chan_nb <- length(ctx$rselect()[[1]])
+# 
+# cnames <- unlist(ctx$cnames)
+# filename_col <- (cnames[grep("[F,f]ilename", cnames)][1])
+# type_col <- (cnames[grep("[T,t]ype", cnames)][1])
 
-train_data <- data_all[data_all["js0.type"]== "Train",]
-validate_data <- data_all[data_all["js0.type"]== "control",]
+colnames(data_all)[grep("[T,t]ype",colnames(data_all))]<-"type"
+colnames(data_all)
+
+colnames(data_all)[grep("[F,f]ilename",colnames(data_all))]<-"filename"
+colnames(data_all)
+
+train_data <- data_all[data_all["type"]== "Train",]
+validate_data <- data_all[data_all["type"]== "control",]
 
 #create temporary file 
 
 dir.create("train")
-for (js0.filename in unique(train_data$"js0.filename"))     {
-  tmp_file_data <- train_data[train_data["js0.filename"] == js0.filename,]
+for (filename in unique(train_data$"filename"))     {
+  tmp_file_data <- train_data[train_data["filename"] == filename,]
   flow.dat <- flowCore::flowFrame(as.matrix(tmp_file_data[1:chan_nb]))
   
-  outfile<-paste("train/",js0.filename, sep="")
+  outfile<-paste("train/",filename, sep="")
   write.FCS(flow.dat, outfile)
 }
 
 dir.create("validate")
-for (js0.filename in unique(validate_data$"js0.filename"))     {
-  tmp_file_data <- train_data[validate_data["js0.filename"] == js0.filename,]
+for (filename in unique(validate_data$"filename"))     {
+  tmp_file_data <- train_data[validate_data["filename"] == filename,]
   flow.dat <- flowCore::flowFrame(as.matrix(tmp_file_data[1:chan_nb]))
   
-  outfile<-paste("validate/",js0.filename, sep="")
+  outfile<-paste("validate/",filename, sep="")
   write.FCS(flow.dat, outfile)
 }
 
@@ -127,10 +137,9 @@ f.names<- paste("./Normalized/",list.files(path="./Normalized", pattern="Norm_")
 test.fun<-f.names%>%
   lapply(function(filename){
     data = fcs_to_data(filename)
-    task<-NULL
     if (!is.null(task)) {
       # task is null when run from RStudio
-      actual = get("actual",  envir = .GlobalEnv) + 1
+      actual <-get("actual",  envir = .GlobalEnv) + 1
       assign("actual", actual, envir = .GlobalEnv)
       evt = TaskProgressEvent$new()
       evt$taskId = task$id
@@ -153,4 +162,3 @@ test.fun%>%
 unlink("train",recursive = TRUE)
 unlink("validate",recursive = TRUE)
 unlink("Normalized",recursive = TRUE)
-
