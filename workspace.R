@@ -36,13 +36,14 @@ fcs_to_data = function(filename) {
     mutate(filename = rep_len(basename(filename), nrow(.)))
 }
 
-
-
 ############################## read FCS files
 
 # get the input from tercen
 ctx <- tercenCtx()
 task<-ctx$task
+nclust <- as.double(ctx$op.value('cluster'))
+ncells <- as.double(ctx$op.value('number_of_cells'))
+
 #data <- ctx$select()
 
 data_all <-as.matrix(ctx) %>% t()
@@ -98,10 +99,10 @@ list_validate<-list.files("validate",full.names = TRUE)
 
 fsom <- prepareFlowSOM(list_train,
                        channels,
-                       nCells = 6000,
+                       nCells = ncells,
                        FlowSOM.params = list(xdim = 5,
                                              ydim = 5,
-                                             nClus = 10,
+                                             nClus = nclust,
                                              scale = FALSE),
                        transformList = transformList,
                        seed = 1)
@@ -111,10 +112,10 @@ model <- CytoNorm.train(files = list_train,
                         labels = list_train,
                         channels = channels,
                         transformList = transformList,
-                        FlowSOM.params = list(nCells = 6000, 
+                        FlowSOM.params = list(nCells = ncells, 
                                               xdim = 5,
                                               ydim = 5,
-                                              nClus = 10,
+                                              nClus = nclust,
                                               scale = FALSE),
                         normMethod.train = QuantileNorm.train,
                         normParams = list(nQ = 101,

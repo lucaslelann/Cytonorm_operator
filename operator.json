@@ -4,8 +4,21 @@
   "tags": ["flow cytometry", "normalization"],
   "authors": ["tercen"],
   "urls": ["https://github.com/tercen/cytonorm_operator"],
-  "container":"tercen/cytonorm:0.0.14",
-  "properties": [  ]
+  "container":"lucas501/cytonorm_docker:0.0.16",
+  "properties": [ 
+    {
+    "kind": "DoubleProperty",
+    "name": "cluster",
+    "defaultValue": 10,
+    "description": "Number of cluster"
+   },
+   {
+    "kind": "DoubleProperty",
+    "name": "number_of_cells",
+    "defaultValue": 6000,
+    "description": "The total number of cells to subsample from the aggregated flowframe of all training data"
+   }
+    ]
 }
 
 
