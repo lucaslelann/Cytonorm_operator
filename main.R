@@ -6,11 +6,11 @@ library(flowCore)
 library(FlowSOM)
 library(devtools)
 library(CytoNorm)
-
+#system.file("extdata", package = "CytoNorm")
 
 #docID
-#options("tercen.workflowId" = "c760adb979f713659d9e4826b004a670")
-#options("tercen.stepId"     = "5deafcbd-8d1a-4a40-b14c-7e8b8b4795b6")
+#options("tercen.workflowId" = "835f1113e61a613dedcbbaf7640313ed")
+#options("tercen.stepId"     = "108ed769-3b37-4134-b4a7-aa48d6afb196")
 
 getOption("tercen.workflowId")
 getOption("tercen.stepId")
@@ -33,24 +33,23 @@ fcs_to_data = function(filename) {
     mutate(filename = rep_len(basename(filename), nrow(.)))
 }
 
-
-
 ############################## read FCS files
 
 # get the input from tercen
 ctx <- tercenCtx()
 task<-ctx$task
-#data <- ctx$select()
+nclust <- as.double(ctx$op.value('cluster'))
+ncells <- as.double(ctx$op.value('number_of_cells'))
+
+#option set  workflow
+nclust <- 10
+ncells <- 6000
 
 data_all <-as.matrix(ctx) %>% t()
 colnames(data_all) <- ctx$rselect()[[1]]
 data_all <-cbind(data_all, ctx$cselect())
 
 chan_nb <- length(ctx$rselect()[[1]])
-# 
-# cnames <- unlist(ctx$cnames)
-# filename_col <- (cnames[grep("[F,f]ilename", cnames)][1])
-# type_col <- (cnames[grep("[T,t]ype", cnames)][1])
 
 colnames(data_all)[grep("[T,t]ype",colnames(data_all))]<-"type"
 colnames(data_all)
@@ -58,36 +57,44 @@ colnames(data_all)
 colnames(data_all)[grep("[F,f]ilename",colnames(data_all))]<-"filename"
 colnames(data_all)
 
+colnames(data_all)[grep("[B,b]atch",colnames(data_all))]<-"batch"
+colnames(data_all)
+
 train_data <- data_all[data_all["type"]== "Train",]
-validate_data <- data_all[data_all["type"]== "control",]
+validate_data <- data_all[data_all["type"]== "validate",]
+batch_train_data <- unique(data_all[data_all["type"]== "Train",]$batch)
+batch_validate_data <- unique(data_all[data_all["type"]== "validate",]$batch)
 
 #create temporary file 
 
 dir.create("train")
 for (filename in unique(train_data$"filename"))     {
-  tmp_file_data <- train_data[train_data["filename"] == filename,]
-  flow.dat <- flowCore::flowFrame(as.matrix(tmp_file_data[1:chan_nb]))
-  
+  tmp_train_file_data <- train_data[train_data["filename"] == filename,]
+  flow.dat <- flowCore::flowFrame(as.matrix(tmp_train_file_data[c(1:(chan_nb),(chan_nb+5))]))
   outfile<-paste("train/",filename, sep="")
   write.FCS(flow.dat, outfile)
 }
 
 dir.create("validate")
 for (filename in unique(validate_data$"filename"))     {
-  tmp_file_data <- train_data[validate_data["filename"] == filename,]
-  flow.dat <- flowCore::flowFrame(as.matrix(tmp_file_data[1:chan_nb]))
-  
+  tmp_val_file_data <- validate_data[validate_data["filename"] == filename,]
+  flow.dat <- flowCore::flowFrame(as.matrix(tmp_val_file_data[c(1:(chan_nb),(chan_nb+5))]))
   outfile<-paste("validate/",filename, sep="")
   write.FCS(flow.dat, outfile)
 }
 
-# Open 1 of the flow cytometry files to get the channels and set uo the tranformation
+# Open 1 of the flow cytometry files to get the channels and set up the tranformation
 
-channels <- flowCore::colnames(train_data)[c(1:chan_nb)]
-transformList <- flowCore::transformList(channels,
-                                         cytofTransform)
-transformList.reverse <- flowCore::transformList(channels,
-                                                 cytofTransform.reverse)
+#ff <- flowCore::read.FCS(paste("validate/",filename, sep=""))
+#channels <- flowCore::colnames(train_data)[c(1:chan_nb)]
+
+channels <- colnames(train_data)[c(48, 46, 43, 45, 20, 16, 21, 19, 22, 50, 47,
+                                   40, 44, 33, 17, 11, 18, 51, 14, 23, 32, 10,
+                                   49, 27, 24, 31, 42, 37, 39, 34, 41, 26, 30, 
+                                   28, 29, 25, 35)]
+
+transformList <- flowCore::transformList(channels,cytofTransform)
+transformList.reverse <- flowCore::transformList(channels,cytofTransform.reverse)
 
 ############################ Preparation 
 list_train<-list.files("train",full.names = TRUE)
@@ -95,23 +102,23 @@ list_validate<-list.files("validate",full.names = TRUE)
 
 fsom <- prepareFlowSOM(list_train,
                        channels,
-                       nCells = 6000,
+                       nCells = ncells,
                        FlowSOM.params = list(xdim = 5,
                                              ydim = 5,
-                                             nClus = 10,
+                                             nClus = nclust,
                                              scale = FALSE),
                        transformList = transformList,
                        seed = 1)
 
 ########################### Model determination
 model <- CytoNorm.train(files = list_train,
-                        labels = list_train,
+                        labels =  batch_train_data,
                         channels = channels,
                         transformList = transformList,
-                        FlowSOM.params = list(nCells = 6000, 
+                        FlowSOM.params = list(nCells = ncells, 
                                               xdim = 5,
                                               ydim = 5,
-                                              nClus = 10,
+                                              nClus = nclust,
                                               scale = FALSE),
                         normMethod.train = QuantileNorm.train,
                         normParams = list(nQ = 101,
@@ -122,7 +129,7 @@ model <- CytoNorm.train(files = list_train,
 
 CytoNorm.normalize(model = model,
                    files = list_validate,
-                   labels = list_validate,
+                   labels = batch_validate_data,
                    transformList = transformList,
                    transformList.reverse = transformList.reverse,
                    normMethod.normalize = QuantileNorm.normalize,
@@ -162,3 +169,4 @@ test.fun%>%
 unlink("train",recursive = TRUE)
 unlink("validate",recursive = TRUE)
 unlink("Normalized",recursive = TRUE)
+
