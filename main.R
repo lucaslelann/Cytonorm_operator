@@ -8,13 +8,6 @@ library(devtools)
 library(CytoNorm)
 #system.file("extdata", package = "CytoNorm")
 
-#docID
-#options("tercen.workflowId" = "835f1113e61a613dedcbbaf7640313ed")
-#options("tercen.stepId"     = "108ed769-3b37-4134-b4a7-aa48d6afb196")
-
-getOption("tercen.workflowId")
-getOption("tercen.stepId")
-
 ############################### FUNCTION
 # fcs_to_data
 # input filename of fcs data
@@ -41,10 +34,6 @@ task<-ctx$task
 nclust <- as.double(ctx$op.value('cluster'))
 ncells <- as.double(ctx$op.value('number_of_cells'))
 
-#option set  workflow
-nclust <- 10
-ncells <- 6000
-
 data_all <-as.matrix(ctx) %>% t()
 colnames(data_all) <- ctx$rselect()[[1]]
 data_all <-cbind(data_all, ctx$cselect())
@@ -70,7 +59,10 @@ batch_validate_data <- unique(data_all[data_all["type"]== "validate",]$batch)
 dir.create("train")
 for (filename in unique(train_data$"filename"))     {
   tmp_train_file_data <- train_data[train_data["filename"] == filename,]
-  flow.dat <- flowCore::flowFrame(as.matrix(tmp_train_file_data[c(1:(chan_nb),(chan_nb+5))]))
+  
+  #write in the data file the channels without the annotation columns but with the time 
+  #flow.dat <- flowCore::flowFrame(as.matrix(tmp_train_file_data[c(1:(chan_nb),(chan_nb+5))]))
+  flow.dat <- flowCore::flowFrame(as.matrix(tmp_train_file_data[c(1:(chan_nb))]))
   outfile<-paste("train/",filename, sep="")
   write.FCS(flow.dat, outfile)
 }
@@ -78,20 +70,17 @@ for (filename in unique(train_data$"filename"))     {
 dir.create("validate")
 for (filename in unique(validate_data$"filename"))     {
   tmp_val_file_data <- validate_data[validate_data["filename"] == filename,]
-  flow.dat <- flowCore::flowFrame(as.matrix(tmp_val_file_data[c(1:(chan_nb),(chan_nb+5))]))
+  
+  #write in the data file the channels without the annotation columns but with the time 
+  #flow.dat <- flowCore::flowFrame(as.matrix(tmp_val_file_data[c(1:(chan_nb),(chan_nb+5))]))
+  flow.dat <- flowCore::flowFrame(as.matrix(tmp_val_file_data[c(1:(chan_nb))]))
   outfile<-paste("validate/",filename, sep="")
   write.FCS(flow.dat, outfile)
 }
 
 # Open 1 of the flow cytometry files to get the channels and set up the tranformation
-
-#ff <- flowCore::read.FCS(paste("validate/",filename, sep=""))
-#channels <- flowCore::colnames(train_data)[c(1:chan_nb)]
-
-channels <- colnames(train_data)[c(48, 46, 43, 45, 20, 16, 21, 19, 22, 50, 47,
-                                   40, 44, 33, 17, 11, 18, 51, 14, 23, 32, 10,
-                                   49, 27, 24, 31, 42, 37, 39, 34, 41, 26, 30, 
-                                   28, 29, 25, 35)]
+fcs_train <- flowCore::read.FCS(paste("train/",unique(train_data$"filename")[1], sep=""))
+channels <- colnames(fcs_train)[c(0:chan_nb)]
 
 transformList <- flowCore::transformList(channels,cytofTransform)
 transformList.reverse <- flowCore::transformList(channels,cytofTransform.reverse)
@@ -169,4 +158,3 @@ test.fun%>%
 unlink("train",recursive = TRUE)
 unlink("validate",recursive = TRUE)
 unlink("Normalized",recursive = TRUE)
-

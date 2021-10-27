@@ -87,14 +87,16 @@ for (filename in unique(validate_data$"filename"))     {
 }
 
 # Open 1 of the flow cytometry files to get the channels and set up the tranformation
-
-#ff <- flowCore::read.FCS(paste("validate/",filename, sep=""))
 #channels <- flowCore::colnames(train_data)[c(1:chan_nb)]
 
-channels <- colnames(train_data)[c(48, 46, 43, 45, 20, 16, 21, 19, 22, 50, 47,
-                                     40, 44, 33, 17, 11, 18, 51, 14, 23, 32, 10,
-                                     49, 27, 24, 31, 42, 37, 39, 34, 41, 26, 30, 
-                                     28, 29, 25, 35)]
+#channels <- colnames(train_data)[c(48, 46, 43, 45, 20, 16, 21, 19, 22, 50, 47,
+                                     # 40, 44, 33, 17, 11, 18, 51, 14, 23, 32, 10,
+                                     # 49, 27, 24, 31, 42, 37, 39, 34, 41, 26, 30, 
+                                     # 28, 29, 25, 35)-3]
+#channels <- colnames(train_data)[c(52,26,34,53,12,48,46,8,33,43,13,18,30,23,47,16,28,22,45,41,14,21,15,37,39,17,38,42,50,31,10)]
+#channels <- colnames(validate_data)[c(52,26,34,53,12,48,46,8,33,43,13,18,30,23,47,16,28,22,45,41,14,21,15,37,39,17,38,42,50,31,10)]
+#channels <- colnames(validate_data)[c(1:20)]
+channels <- colnames(train_data)[c(0:chan_nb)]
 
 transformList <- flowCore::transformList(channels,cytofTransform)
 transformList.reverse <- flowCore::transformList(channels,cytofTransform.reverse)
