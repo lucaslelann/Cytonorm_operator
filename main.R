@@ -288,7 +288,6 @@ test.fun<-f.names%>%
 
 
 test.fun%>%
-  ctx$addNamespace()  %>%
   ctx$save()
 
 unlink("train",recursive = TRUE)
