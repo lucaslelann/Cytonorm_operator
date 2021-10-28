@@ -158,9 +158,6 @@ CytoNorm.normalize.custom <- function(model,
 }
 
 
-
-
-
 ############################## read FCS files
 
 # get the input from tercen
@@ -269,18 +266,21 @@ f.names<- paste("./Normalized/",list.files(path="./Normalized", pattern="Norm_")
 test.fun<-f.names%>%
   lapply(function(filename){
     data = fcs_to_data(filename)
+    # if (!is.null(task)) {
+    #   # task is null when run from RStudio
+    #   actual <-get("actual",  envir = .GlobalEnv) + 1
+    #   assign("actual", actual, envir = .GlobalEnv)
+    #   evt = TaskProgressEvent$new()
+    #   evt$taskId = task$id
+    #   evt$total = length(f.names)
+    #   evt$actual = actual
+    #   evt$message = paste0('processing FCS file ' , filename)
+    #   ctx$client$eventService$sendChannel(task$channelId, evt)
+    # } else {
+    #   cat('processing FCS file ' , filename)
+    # }
     if (!is.null(task)) {
-      # task is null when run from RStudio
-      actual <-get("actual",  envir = .GlobalEnv) + 1
-      assign("actual", actual, envir = .GlobalEnv)
-      evt = TaskProgressEvent$new()
-      evt$taskId = task$id
-      evt$total = length(f.names)
-      evt$actual = actual
-      evt$message = paste0('processing FCS file ' , filename)
-      ctx$client$eventService$sendChannel(task$channelId, evt)
-    } else {
-      cat('processing FCS file ' , filename)
+     cat('processing FCS file ' , filename)
     }
     data
   }) %>%
