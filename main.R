@@ -166,9 +166,12 @@ task<-ctx$task
 nclust <- as.double(ctx$op.value('cluster'))
 ncells <- as.double(ctx$op.value('number_of_cells'))
 
+batch.colors<-ctx$select(ctx$colors)
+type.labels<-ctx$select(ctx$labels)
+
 data_all <-as.matrix(ctx) %>% t()
 colnames(data_all) <- ctx$rselect()[[1]]
-data_all <-cbind(data_all, ctx$cselect())
+data_all <-cbind(data_all, type.labels, batch.colors, ctx$cselect())
 
 chan_nb <- length(ctx$rselect()[[1]])
 
