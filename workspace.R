@@ -167,7 +167,7 @@ CytoNorm.normalize.custom <- function(model,
 do.unique = function(df){
   result = unique(df)
   if (dim(result)[1] > 1) stop('One label is required')
-  return (result %>% select(.dots = ("-.ci")))
+  return (result %>% select(.dots = (".ci")))
 }
 
 ############################## read FCS files
