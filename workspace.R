@@ -170,7 +170,6 @@ do.unique = function(df){
   return (result %>% select(.dots = ("-.ci")))
 }
 
-
 ############################## read FCS files
 
 # get the input from tercen
