@@ -157,13 +157,6 @@ CytoNorm.normalize.custom <- function(model,
   }
 }
 
-
-do.unique = function(df){
-  result = unique(df)
-  if (dim(result)[1] > 1) stop('One label is required')
-  return (result %>% select(.dots = (".ci")))
-}
-
 ############################## read FCS files
 
 # get the input from tercen
@@ -174,15 +167,15 @@ ncells <- as.double(ctx$op.value('number_of_cells'))
 
 batch.colors<-ctx$select(unlist(list(ctx$colors, '.ci')))  %>% 
   group_by(.ci) %>% 
-  do(do.unique(.)) 
+  unique(.) 
 
 type.labels<-ctx$select(unlist(list(ctx$labels, '.ci')))  %>% 
   group_by(.ci) %>% 
-  do(do.unique(.)) 
+  unique(.)
 
 data_all <-as.matrix(ctx) %>% t()
 colnames(data_all) <- ctx$rselect()[[1]]
-data_all <-cbind(data_all, type.labels, batch.colors, ctx$cselect())
+data_all <-cbind(data_all, labels[,1], batch[,1], ctx$cselect())
 
 chan_nb <- length(ctx$rselect()[[1]])
 
