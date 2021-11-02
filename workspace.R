@@ -32,6 +32,144 @@ fcs_to_data = function(filename) {
     mutate(.ci = rep_len(0, nrow(.))) %>%
     mutate(filename = rep_len(basename(filename), nrow(.)))
 }
+CytoNorm.normalize.custom <- function(model,
+                                      files,
+                                      labels,
+                                      channels,
+                                      transformList,
+                                      transformList.reverse,
+                                      outputDir = ".",
+                                      prefix = "Norm_",
+                                      clean = TRUE,
+                                      verbose = FALSE,
+                                      normMethod.normalize = QuantileNorm.normalize){
+  if(is.null(model$fsom) |
+     is.null(model$clusterRes)){
+    stop("The 'model' paramter should be the result of using the
+             trainQuantiles function.")
+  }
+  
+  if(length(labels) != length(files)){
+    stop("Input parameters 'labels' and 'files' should have the same length")
+  }
+  
+  # Create output directory
+  if(!dir.exists(outputDir)){
+    dir.create(outputDir)
+  }
+  
+  fsom <- model$fsom
+  clusterRes <- model$clusterRes
+  
+  # Split files by clusters
+  cellClusterIDs <- list()
+  meta <- list()
+  cluster_files <- list()
+  for(file in files){
+    if(verbose) message("Splitting ",file)
+    ff <- flowCore::read.FCS(file)
+    
+    if(!is.null(transformList)){
+      ff <- flowCore::transform(ff, transformList)
+      # meta[[file]] <- list()
+      # meta[[file]][["description_original"]] <- ff@description
+      # meta[[file]][["parameters_original"]] <- ff@parameters
+    }
+    
+    fsom_file <- FlowSOM::NewData(fsom,ff)
+    
+    cellClusterIDs[[file]] <- FlowSOM::GetMetaclusters(fsom_file)
+    
+    for(cluster in unique(fsom$metaclustering)){
+      if (sum(cellClusterIDs[[file]] == cluster) > 0) {
+        f <- file.path(outputDir,
+                       paste0(gsub("[:/]","_",file),
+                              "_fsom", cluster, ".fcs"))
+        suppressWarnings(
+          flowCore::write.FCS(ff[cellClusterIDs[[file]] == cluster],
+                              file = f)
+        )
+      }
+    }
+  }
+  
+  # Apply normalization on each cluster
+  for(cluster in unique(fsom$metaclustering)){
+    if(verbose) message("Processing cluster ",cluster)
+    files_tmp <- file.path(outputDir,
+                           paste0(gsub("[:/]",
+                                       "_",
+                                       files),
+                                  "_fsom",
+                                  cluster,
+                                  ".fcs"))
+    labels_tmp <- labels[file.exists(files_tmp)]
+    files_tmp <- files_tmp[file.exists(files_tmp)]
+    normMethod.normalize(model = clusterRes[[cluster]],
+                         files = files_tmp,
+                         labels = labels_tmp,
+                         outputDir = file.path(outputDir),
+                         prefix = "Norm_",
+                         transformList = NULL,
+                         transformList.reverse = NULL,
+                         removeOriginal = TRUE,
+                         verbose = verbose)
+  }
+  
+  # Combine clusters into one final fcs file
+  for(file in files){
+    if(verbose) message("Rebuilding ",file)
+    
+    ff <- flowCore::read.FCS(file)
+    
+    # Addition of this code to manage infinite values
+    list_channels<-channels
+    for (channel in list_channels){
+      ff@exprs[,channel][mapply(is.infinite, ff@exprs[,channel])] <-quantile(ff@exprs[,channel], probs = .99)
+    }
+    
+    for(cluster in unique(fsom$metaclustering)){
+      file_name <- file.path(outputDir,
+                             paste0("Norm_",gsub("[:/]","_",file),
+                                    "_fsom",cluster,".fcs"))
+      if (file.exists(file_name)) {
+        ff_subset <- flowCore::read.FCS(file_name)
+        flowCore::exprs(ff)[cellClusterIDs[[file]] == cluster,] <- flowCore::exprs(ff_subset)
+      }
+    }
+    
+    if(!is.null(transformList.reverse)){
+      ff <- flowCore::transform(ff, transformList.reverse)
+      # ff@description <- meta[[file]][["description_original"]]
+      # ff@parameters <- meta[[file]][["parameters_original"]]
+    }
+    
+    
+    # Adapt to real min and max because this gets strange values otherwise
+    ff@parameters@data[,"minRange"] <- apply(ff@exprs, 2, min)
+    ff@parameters@data[,"maxRange"] <- apply(ff@exprs, 2, max)
+    ff@parameters@data[,"range"] <- ff@parameters@data[,"maxRange"] -
+      ff@parameters@data[,"minRange"]
+    
+    if(clean){
+      file.remove(file.path(outputDir,
+                            paste0("Norm_",gsub("[:/]","_",file),
+                                   "_fsom",unique(fsom$metaclustering),".fcs")))
+    }
+    
+    suppressWarnings(flowCore::write.FCS(ff,
+                                         file=file.path(outputDir,
+                                                        paste0(prefix,gsub(".*/","",file)))))
+  }
+}
+
+
+do.unique = function(df){
+  result = unique(df)
+  if (dim(result)[1] > 1) stop('One label is required')
+  return (result %>% select(.dots = ("-.ci")))
+}
+
 
 ############################## read FCS files
 
@@ -41,13 +179,21 @@ task<-ctx$task
 nclust <- as.double(ctx$op.value('cluster'))
 ncells <- as.double(ctx$op.value('number_of_cells'))
 
+batch<-ctx$select(unlist(list(ctx$colors, '.ci')))  %>% 
+  group_by(.ci) %>% 
+  do(do.unique(.)) 
+
+labels<-ctx$select(unlist(list(ctx$labels, '.ci')))  %>% 
+  group_by(.ci) %>% 
+  do(do.unique(.)) 
+
 #option set workflow default option set in tutorial
 nclust <- 10
 ncells <- 6000
 
 data_all <-as.matrix(ctx) %>% t()
 colnames(data_all) <- ctx$rselect()[[1]]
-data_all <-cbind(data_all, ctx$cselect())
+data_all <-cbind(data_all, labels[,2], batch[,2], ctx$cselect())
 
 chan_nb <- length(ctx$rselect()[[1]])
 
@@ -72,7 +218,7 @@ for (filename in unique(train_data$"filename"))     {
   tmp_train_file_data <- train_data[train_data["filename"] == filename,]
   
   #write in the data file the channels without the annotation columns but with the time 
-  flow.dat <- flowCore::flowFrame(as.matrix(tmp_train_file_data[c(1:(chan_nb),(chan_nb+5))]))
+  flow.dat <- flowCore::flowFrame(as.matrix(tmp_train_file_data[c(1:(chan_nb))]))
   outfile<-paste("train/",filename, sep="")
   write.FCS(flow.dat, outfile)
 }
@@ -81,7 +227,7 @@ dir.create("validate")
 for (filename in unique(validate_data$"filename"))     {
   tmp_val_file_data <- validate_data[validate_data["filename"] == filename,]
   #write in the data file the channels without the annotation columns but with the time 
-  flow.dat <- flowCore::flowFrame(as.matrix(tmp_val_file_data[c(1:(chan_nb),(chan_nb+5))]))
+  flow.dat <- flowCore::flowFrame(as.matrix(tmp_val_file_data[c(1:(chan_nb))]))
   outfile<-paste("validate/",filename, sep="")
   write.FCS(flow.dat, outfile)
 }
@@ -132,9 +278,10 @@ model <- CytoNorm.train(files = list_train,
                         verbose = TRUE)
 ########################## Application of CytoNorm
 
-CytoNorm.normalize(model = model,
+CytoNorm.normalize.custom(model = model,
                    files = list_validate,
                    labels = batch_validate_data,
+                   channels = channels,
                    transformList = transformList,
                    transformList.reverse = transformList.reverse,
                    normMethod.normalize = QuantileNorm.normalize,

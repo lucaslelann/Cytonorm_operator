@@ -158,6 +158,12 @@ CytoNorm.normalize.custom <- function(model,
 }
 
 
+do.unique = function(df){
+  result = unique(df)
+  if (dim(result)[1] > 1) stop('One label is required')
+  return (result %>% select(.dots = ("-.ci")))
+}
+
 ############################## read FCS files
 
 # get the input from tercen
@@ -166,20 +172,24 @@ task<-ctx$task
 nclust <- as.double(ctx$op.value('cluster'))
 ncells <- as.double(ctx$op.value('number_of_cells'))
 
+batch.colors<-ctx$select(unlist(list(ctx$colors, '.ci')))  %>% 
+  group_by(.ci) %>% 
+  do(do.unique(.)) 
+
+type.labels<-ctx$select(unlist(list(ctx$labels, '.ci')))  %>% 
+  group_by(.ci) %>% 
+  do(do.unique(.)) 
+
 data_all <-as.matrix(ctx) %>% t()
 colnames(data_all) <- ctx$rselect()[[1]]
-data_all <-cbind(data_all, ctx$cselect())
+data_all <-cbind(data_all, type.labels, batch.colors, ctx$cselect())
 
 chan_nb <- length(ctx$rselect()[[1]])
 
 colnames(data_all)[grep("[T,t]ype",colnames(data_all))]<-"type"
-colnames(data_all)
-
 colnames(data_all)[grep("[F,f]ilename",colnames(data_all))]<-"filename"
-colnames(data_all)
-
 colnames(data_all)[grep("[B,b]atch",colnames(data_all))]<-"batch"
-colnames(data_all)
+
 
 train_data <- data_all[data_all["type"]== "Train",]
 validate_data <- data_all[data_all["type"]== "validate",]
