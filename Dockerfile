@@ -14,8 +14,8 @@ RUN git clone https://github.com/tercen/cytonorm_operator.git
 
 WORKDIR /operator/cytonorm_operator
 
-RUN echo 1.1.2 && git pull
-RUN git checkout 1.1.2
+RUN echo 1.1.3 && git pull
+RUN git checkout 1.1.3
 
 RUN R -e "renv::consent(provided=TRUE);renv::restore(confirm=FALSE)"
 

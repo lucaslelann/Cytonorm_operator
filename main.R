@@ -175,7 +175,7 @@ type.labels<-ctx$select(unlist(list(ctx$labels, '.ci')))  %>%
 
 data_all <-as.matrix(ctx) %>% t()
 colnames(data_all) <- ctx$rselect()[[1]]
-data_all <-cbind(data_all, labels[,1], batch[,1], ctx$cselect())
+data_all <-cbind(data_all, type.labels[,1], batch.colors[,1], ctx$cselect())
 
 chan_nb <- length(ctx$rselect()[[1]])
 
