@@ -782,10 +782,10 @@
     },
     "misc3d": {
       "Package": "misc3d",
-      "Version": "0.9-0",
+      "Version": "0.9-1",
       "Source": "Repository",
       "Repository": "CRAN",
-      "Hash": "a4540e756faacd9167feb536819e74a7"
+      "Hash": "c075218a4fc802bab009a7f5e01bb686"
     },
     "mnormt": {
       "Package": "mnormt",
