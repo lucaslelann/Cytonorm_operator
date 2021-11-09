@@ -6,6 +6,7 @@ library(flowCore)
 library(FlowSOM)
 library(devtools)
 library(CytoNorm)
+library(tidyr)
 #system.file("extdata", package = "CytoNorm")
 
 ############################### FUNCTION
@@ -26,6 +27,8 @@ fcs_to_data = function(filename) {
     mutate(filename = rep_len(basename(filename), nrow(.)))
 }
 
+# Customized version of the Cytonorm.normalize function from the cytonorm package
+# Addition of code to manage infinite values
 CytoNorm.normalize.custom <- function(model,
                                files,
                                labels,
@@ -290,8 +293,13 @@ test.fun<-f.names%>%
   bind_rows() 
 
 
-test.fun%>%
+test.fun.long<-test.fun%>%
   ctx$addNamespace()  %>%
+  pivot_longer(., cols =paste0(ctx$namespace,".",channels))
+
+colnames(test.fun.long)[3]<-"variable"
+
+ctx$addNamespace(test.fun.long) %>%
   ctx$save()
 
 unlink("train",recursive = TRUE)

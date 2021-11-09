@@ -6,11 +6,12 @@ library(flowCore)
 library(FlowSOM)
 library(devtools)
 library(CytoNorm)
+library(tidyr)
 #system.file("extdata", package = "CytoNorm")
 
 #docID
-options("tercen.workflowId" = "835f1113e61a613dedcbbaf7640313ed")
-options("tercen.stepId"     = "108ed769-3b37-4134-b4a7-aa48d6afb196")
+options("tercen.workflowId" = "8e1125259c02a2b6da8de281bd00c4ed")
+options("tercen.stepId"     = "cae02424-0df3-4b88-a4f7-18ff4b891520")
 
 getOption("tercen.workflowId")
 getOption("tercen.stepId")
@@ -307,8 +308,13 @@ test.fun<-f.names%>%
   bind_rows() 
 
 
-test.fun%>%
+test.fun.long<-test.fun%>%
   ctx$addNamespace()  %>%
+  pivot_longer(., cols =paste0(ctx$namespace,".",channels))
+
+colnames(test.fun.long)[3]<-"variable"
+
+ctx$addNamespace(test.fun.long) %>%
   ctx$save()
 
 unlink("train",recursive = TRUE)
