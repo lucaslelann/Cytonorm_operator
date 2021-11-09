@@ -4,7 +4,7 @@
   "tags": ["flow cytometry", "normalization"],
   "authors": ["tercen"],
   "urls": ["https://github.com/tercen/cytonorm_operator"],
-  "container":"lucas501/cytonorm_docker:1.1.4",
+  "container":"lucas501/cytonorm_docker:1.1.5",
   "properties": [ 
     {
     "kind": "DoubleProperty",
