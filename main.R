@@ -298,7 +298,7 @@ test.fun<-f.names%>%
 
 test.fun.long<-test.fun%>%
   #ctx$addNamespace()  %>%
-  pivot_longer(., cols =paste0(ctx$namespace,".",channels))
+  pivot_longer(., cols =channels)
 
 colnames(test.fun.long)[3]<-"variable"
 
