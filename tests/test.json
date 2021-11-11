@@ -12,7 +12,11 @@
   "inputDataUri": "input_long.csv",
   "outputDataUri": ["table1.csv","table2.csv"],
   "columns": ["js1.filename","Time"],
+<<<<<<< HEAD
   "rows": ["gs3.variable"],
+=======
+  "rows": ["gs3.Variable"],
+>>>>>>> 05784f4b9e41fa1c45fc2135f6a03f443ac6eff1
   "colors": ["js1.batch"],
   "labels": ["js1.Type"],
   "yAxis": "gs3.value",
