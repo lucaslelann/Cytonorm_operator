@@ -11,10 +11,10 @@
   ], 
   "inputDataUri": "input_long.csv",
   "outputDataUri": ["table1.csv","table2.csv"],
-  "columns": ["js0.filename","Time"],
+  "columns": ["js1.filename","Time"],
   "rows": ["gs3Variable"],
-  "colors": ["js0.batch"],
-  "labels": ["js0.Type"],
+  "colors": ["js1.batch"],
+  "labels": ["js1.Type"],
   "yAxis": "gs3.value",
   "xAxis": ""
 }
