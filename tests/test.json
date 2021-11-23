@@ -16,8 +16,5 @@
   "colors": ["js1.batch"],
   "labels": ["js1.Type"],
   "yAxis": "gs3.value",
-  "xAxis": "",
-  "equalityMethod": "R2",
-  "r2": 0.97,
-  "skipColumns": ["js1.filename","Time"]
+  "xAxis": ""
 }
