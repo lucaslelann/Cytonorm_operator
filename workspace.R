@@ -12,7 +12,7 @@ library(tidyr)
 
 #docID
 options("tercen.workflowId" = "8e1125259c02a2b6da8de281bd00c4ed")
-options("tercen.stepId"     = "cae02424-0df3-4b88-a4f7-18ff4b891520")
+options("tercen.stepId"     = "ffdacc8e-a85d-4752-86bc-b7c23b17df8a")
 
 getOption("tercen.workflowId")
 getOption("tercen.stepId")
@@ -192,6 +192,11 @@ ncells <- 6000
 data_all <-as.matrix(ctx) %>% t()
 colnames(data_all) <- ctx$rselect()[[1]]
 data_all <-cbind(data_all, labels[,1], batch[,1], ctx$cselect())
+
+long_data<-pivot_longer(data_all,cols = -c("js1.Type","js1.batch","js1.filename","Time"))
+colnames(long_data)<-c("js1.Type","js1.batch","js1.filename","Time","gs3.variable","gs3.value")
+write.csv(long_data, file="./tests/input_long.csv",  row.names = FALSE)
+
 
 chan_nb <- length(ctx$rselect()[[1]])
 
