@@ -1,24 +1,30 @@
 {
   "name": "cytonorm",
   "description": "R library to normalize cytometry data using flowsom method",
-  "tags": ["flow cytometry", "normalization"],
-  "authors": ["tercen"],
-  "urls": ["https://github.com/tercen/cytonorm_operator"],
-  "container":"lucas501/cytonorm_docker:1.1.9",
-  "properties": [ 
+  "tags": [
+    "flow cytometry",
+    "preprocessing",
+    "normalisation"
+  ],
+  "authors": [
+    "tercen"
+  ],
+  "urls": [
+    "https://github.com/tercen/cytonorm_operator"
+  ],
+  "container": "lucas501/cytonorm_docker:1.1.9",
+  "properties": [
     {
-    "kind": "DoubleProperty",
-    "name": "cluster",
-    "defaultValue": 10,
-    "description": "Number of cluster"
-   },
-   {
-    "kind": "DoubleProperty",
-    "name": "number_of_cells",
-    "defaultValue": 6000,
-    "description": "The total number of cells to subsample from the aggregated flowframe of all training data"
-   }
-    ]
+      "kind": "DoubleProperty",
+      "name": "cluster",
+      "defaultValue": 10,
+      "description": "Number of cluster"
+    },
+    {
+      "kind": "DoubleProperty",
+      "name": "number_of_cells",
+      "defaultValue": 6000,
+      "description": "The total number of cells to subsample from the aggregated flowframe of all training data"
+    }
+  ]
 }
-
-
