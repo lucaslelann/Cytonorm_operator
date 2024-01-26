@@ -1,6 +1,6 @@
 {
-  "name": "cytonorm",
-  "description": "R library to normalize cytometry data using flowsom method",
+  "name": "CytoNorm",
+  "description": "Performs normalisation of flow cytometry data.",
   "tags": [
     "flow cytometry",
     "preprocessing",
